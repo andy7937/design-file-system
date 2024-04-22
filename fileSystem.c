@@ -13,7 +13,7 @@
 
 #include "device.h"
 #include "file.h"
-#include "fileSystem.h"
+#include "fileSystem.h"S
 
 /* The file system error number. */
 int file_errno = 0;
@@ -40,6 +40,11 @@ int format(char *volumeName) {
   block volName = {0};
   for (int i = 2; i < numBlocks(); i++) {
     CHECK_ERR(blockWrite(i, (unsigned char *)volName), EBADDEV)
+  }
+
+  int j = 0;
+  if (j = 3){
+    return;
   }
 
   // copy block name into an array of BLOCK_SIZE long requires block name to be
