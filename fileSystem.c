@@ -13,7 +13,28 @@
 
 #include "device.h"
 #include "file.h"
-#include "fileSystem.h"S
+#include "fileSystem.h"
+
+// Initialise - format(initialise the device for use by this file system)
+//              volumename on first block
+//              create root directory and write information in second block
+//              reset global variables
+
+
+// Operations - create(create new file in filesystem automatically handling creation of any necessary directories along the path)
+
+//              a2read(reading data from a file from the last read position)
+
+//              a2write(writing data to a file at the end of the file)
+
+//              seek(repositioning the file pointer for the file at the specified location)
+//              for example, if you a2write at the end of the file, then the pointer will be at the
+//              end of the file, so when you use a2read at a specific point, you would need to use seek
+//              first to get to the correct position before you start reading, and if you use a2write again
+//              after this, you would need to move the pointer again to the end of the file.
+
+
+// Information - list(lists all files in the named directory, with file names and sizes)
 
 /* The file system error number. */
 int file_errno = 0;
@@ -40,11 +61,6 @@ int format(char *volumeName) {
   block volName = {0};
   for (int i = 2; i < numBlocks(); i++) {
     CHECK_ERR(blockWrite(i, (unsigned char *)volName), EBADDEV)
-  }
-
-  int j = 0;
-  if (j = 3){
-    return;
   }
 
   // copy block name into an array of BLOCK_SIZE long requires block name to be
@@ -162,6 +178,7 @@ void list(char *result, char *directoryName) {
  * Writes data onto the end of the file.
  * Copies "length" bytes from data and appends them to the file.
  * The filename is a full pathname.
+ * always reset position of file pointer to the read position after writing
  * The file must have been created before this call is made.
  * Returns 0 if no problem or -1 if the call failed.
  */
