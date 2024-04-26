@@ -40,10 +40,13 @@
 int file_errno = 0;
 
 typedef struct {
+  // pointer to file name
   char *fileName;
+  // cursor pos for reading/writing
   int cursorpos;
 } filecache;
 
+// access to file and position data for files 
 filecache fileCache[1024];
 int fileCachePos = 0;
 
@@ -58,7 +61,10 @@ int format(char *volumeName) {
   // set all memory to 0 except for first block
   CHECK_TRY(strlen(volumeName) >= BLOCK_SIZE || strlen(volumeName) <= 0,
             EBADVOLNAME)
+  // setting block volName with array 0 (empty)
   block volName = {0};
+
+  // setting all blocks to volName currently empty, block 1 will be used for root directory
   for (int i = 2; i < numBlocks(); i++) {
     CHECK_ERR(blockWrite(i, (unsigned char *)volName), EBADDEV)
   }
@@ -66,8 +72,11 @@ int format(char *volumeName) {
   // copy block name into an array of BLOCK_SIZE long requires block name to be
   // smaller than BLOCK_SIZE
   strncpy((char *)volName, volumeName, BLOCK_SIZE);
+
+  // writing volName into BLOCK 0
   CHECK_ERR(blockWrite(0, volName), EBADDEV)
 
+  // setting rootDir array as (0, 1), presumably to mark it as root dir? not sure yet
   block rootDir = {0, 1};
   finfo root = finfoNew("/", ISDIR, 12, 1);
   finfoWrite(&root, (char *)&rootDir[2]);
@@ -77,6 +86,7 @@ int format(char *volumeName) {
   nextEmptyBlock = 1;
   file_errno = 0;
 
+  // writing rootDir into BLOCK 1
   CHECK_ERR(blockWrite(1, rootDir), EBADDEV)
   return 0;
 }
@@ -86,6 +96,14 @@ int format(char *volumeName) {
  * Returns 0 if no problem or -1 if the call failed.
  */
 int volumeName(char *result) {
+
+  block temp;
+
+  if (blockRead(0, result) < 0){
+    return -1;
+  }
+
+
   return 0;
 }
 
