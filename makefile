@@ -40,3 +40,16 @@ volumeName: volumeNameTest.c fileSystem.c device.c file.c
 
 createTest: createTest.c fileSystem.c device.c file.c
 	$(CC) $(CFLAGS) -o createTest createTest.c fileSystem.c device.c file.c -lm
+
+writeTest: writeTest.c fileSystem.c device.c file.c
+	$(CC) $(CFLAGS) -o writeTest writeTest.c fileSystem.c device.c file.c -lm
+
+listTest: listTest.c fileSystem.c device.c file.c
+	$(CC) $(CFLAGS) -o listTest listTest.c fileSystem.c device.c file.c -lm
+
+readTest: readTest.c fileSystem.c device.c file.c
+	$(CC) $(CFLAGS) -o readTest readTest.c fileSystem.c device.c file.c -lm
+
+
+
+

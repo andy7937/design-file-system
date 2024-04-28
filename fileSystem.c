@@ -234,11 +234,36 @@ void list(char *result, char *directoryName) {
  * Writes data onto the end of the file.
  * Copies "length" bytes from data and appends them to the file.
  * The filename is a full pathname.
- * always reset position of file pointer to the read position after writing
  * The file must have been created before this call is made.
  * Returns 0 if no problem or -1 if the call failed.
  */
 int a2write(char *fileName, void *data, int length) {
+  char dirPathName[strlen(fileName) + 1];
+  char basePathName[strlen(fileName) + 1];
+  strcpy(dirPathName, fileName);
+  strcpy(basePathName, fileName);
+  char *dirName = dirname(dirPathName);
+  char *baseName = basename(basePathName);
+
+  CHECK_TRY(baseName[0] == '.' || dirName[0] == '.', EOTHER)
+  finfoData fData;
+  CHECK_RET(traverseFiles(&fData, 1, dirName))
+  int arrSize = fData.curDir.size / DIRCONTENTSIZE;
+  finfo files[arrSize];
+  CHECK_RET(getDirContent(&fData.curDir, files))
+  // go through the directory and see if the baseName is already inside
+  fData.nextDirIndex = containsFile(files, arrSize, baseName, ISFILE);
+  //If there is no such file
+  if (fData.nextDirIndex == -1) {
+    return -1;
+  } 
+  // file exists, append file data
+  else{
+    fData.nextDir = files[fData.nextDirIndex];
+    CHECK_RET(dataAppendFile(&fData.nextDir, data, length))
+    CHECK_RET(updateDirEntry(&fData.prevDir, &fData.curDir, fData.curDirIndex))
+
+  }
   return 0;
 }
 
