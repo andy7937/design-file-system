@@ -139,30 +139,26 @@ int create(char *pathName) {
   char *baseName = basename(basePathName);
 
   // checking all file names are valid
-  int segmentBytes = 0;
   int length = strlen(pathName);
-
-  // go through pathName and check if all segments are valid
-  for (int i = 0; i <= length; i++) {
-    // if we reach a / or the end of the string
+  int segmentBytes = 0; // Reset segment length counter
+  
+for (int i = 1; i <= length; i++) { // Start from 1 to skip the initial '/'
     if (pathName[i] == '/' || i == length) {
-      // if the segment is empty or too long
-      if (segmentBytes < 1 || segmentBytes > 7) {
-          file_errno = EOTHER;
-          return -1;
-      }
-        segmentBytes = 0; 
-    } 
-    else {
-      // if the character is not allowed
-      if ((unsigned char)pathName[i] < 0x20 || (unsigned char)pathName[i] > 0x7e) {
-          file_errno = EOTHER;
-          return -1;
-      }
-      // increase the segment byte length by 1
-      segmentBytes++;
+        if (segmentBytes < 1 || segmentBytes > 7) {
+            file_errno = EOTHER;
+            return -1;
+        }
+        segmentBytes = 0; // Reset for the next segment
+    } else {
+        // Check for valid ASCII characters
+        if ((unsigned char)pathName[i] < 0x20 || (unsigned char)pathName[i] > 0x7e) {
+            file_errno = EOTHER;
+            return -1;
+        }
+        segmentBytes++;
     }
-  }
+}
+
 
   CHECK_TRY(baseName[0] == '.' || dirName[0] == '.', EOTHER)
   finfoData fData;
@@ -238,33 +234,57 @@ void list(char *result, char *directoryName) {
  * Returns 0 if no problem or -1 if the call failed.
  */
 int a2write(char *fileName, void *data, int length) {
+  // Duplicate the fileName to use with dirname and basename
   char dirPathName[strlen(fileName) + 1];
   char basePathName[strlen(fileName) + 1];
   strcpy(dirPathName, fileName);
   strcpy(basePathName, fileName);
+  
+  // Extract directory path and base filename
   char *dirName = dirname(dirPathName);
   char *baseName = basename(basePathName);
 
-  CHECK_TRY(baseName[0] == '.' || dirName[0] == '.', EOTHER)
+  // Check for invalid file or directory names starting with '.'
+  if (baseName[0] == '.' || dirName[0] == '.') {
+    file_errno = EOTHER;
+    return -1;
+  }
+
+  // Data structure to hold file and directory information
   finfoData fData;
-  CHECK_RET(traverseFiles(&fData, 1, dirName))
+
+  // Navigate through the directory structure to find the directory
+  if (traverseFiles(&fData, 0, dirName) == -1) {
+    return -1; // Directory traversal failed
+  }
+
+  // Get the directory content
   int arrSize = fData.curDir.size / DIRCONTENTSIZE;
   finfo files[arrSize];
-  CHECK_RET(getDirContent(&fData.curDir, files))
-  // go through the directory and see if the baseName is already inside
-  fData.nextDirIndex = containsFile(files, arrSize, baseName, ISFILE);
-  //If there is no such file
-  if (fData.nextDirIndex == -1) {
-    return -1;
-  } 
-  // file exists, append file data
-  else{
-    fData.nextDir = files[fData.nextDirIndex];
-    CHECK_RET(dataAppendFile(&fData.nextDir, data, length))
-    CHECK_RET(updateDirEntry(&fData.prevDir, &fData.curDir, fData.curDirIndex))
-
+  if (getDirContent(&fData.curDir, files) == -1) {
+    return -1; // Failed to read directory content
   }
-  return 0;
+
+  // Check if the file already exists
+  fData.nextDirIndex = containsFile(files, arrSize, baseName, ISFILE);
+  if (fData.nextDirIndex == -1) {
+    return -1; // File does not exist
+  }
+
+  // File exists, prepare to append data
+  fData.nextDir = files[fData.nextDirIndex];
+
+  // Append data to the file
+  if (dataAppend(&fData.nextDir, data, length) == -1) {
+    return -1; // Appending data failed
+  }
+
+  // Update the directory entry to reflect changes in the file structure
+  if (updateDirEntry(&fData.prevDir, &fData.curDir, fData.curDirIndex) == -1) {
+    return -1; // Failed to update directory entry
+  }
+
+  return 0; // Success
 }
 
 // TODO: TEST

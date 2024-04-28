@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "fileSystem.h"
+#include "file.h"
 
 int main(void) {
     int result;
@@ -9,32 +10,47 @@ int main(void) {
     int dataLength = strlen(data);
 
     // Initialize and format the filesystem
-    format("TestFS");
+    if (format("TestFS") != 0) {
+        printf("Failed to format filesystem.\n");
+        return EXIT_FAILURE;
+    }
 
     // Create a test file
-    create("/testFolder/testFile.txt");
-    write_to_file("/testFolder/testFile.txt", "Initial data.", 13);
+    if (create("/dir1/subdir1/fi.txt") != 0) {
+        printf("Failed to create file '/dir1/subdir1/fi.txt'.\n");
+        return EXIT_FAILURE;
+    }
 
     // Test 1: Append data to an existing file
-    result = a2write("/testFolder/testFile.txt", data, dataLength);
-    if (result == 0) {
-        printf("Test 1 Passed: Data appended successfully.\n");
-    } else {
-        printf("Test 1 Failed: Could not append data.\n");
-    }
+    result = a2write("/dir1/subdir1/fi.txt", data, dataLength);
+    printf(result == 0 ? "Test 1 Passed: Data appended successfully.\n" : "Test 1 Failed: Could not append data.\n");
 
     // Test 2: Try writing to a non-existent file
-    result = a2write("/testFolder/nonexistent.txt", data, dataLength);
-    if (result == -1) {
-        printf("Test 2 Passed: Correctly handled non-existent file.\n");
-    } else {
-        printf("Test 2 Failed: Did not handle non-existent file correctly.\n");
-    }
+    result = a2write("/dir1/subdir1/nonexistent.txt", data, dataLength);
+    printf(result == -1 ? "Test 2 Passed: Correctly handled non-existent file.\n" : "Test 2 Failed: Did not handle non-existent file correctly.\n");
 
-    // Optional: Read back the data to verify correctness
-    char readBackData[512] = {0};
-    a2read("/testFolder/testFile.txt", readBackData, 512);
-    printf("Data in file: %s\n", readBackData);
+    // Read back the data to verify correctness
+    finfoData fData;
+    if (traverseFiles(&fData, 0, "/dir1/subdir1") != -1) {
+        int arrSize = fData.curDir.size / DIRCONTENTSIZE;
+        finfo files[arrSize];
+        getDirContent(&fData.curDir, files);
+        int fileIndex = containsFile(files, arrSize, "fi.txt", ISFILE);
+        if (fileIndex != -1) {
+            char* readBackData = malloc(files[fileIndex].size + 1);
+            if (dataRead(&files[fileIndex], readBackData) == 0) {
+                readBackData[files[fileIndex].size] = '\0';  // Null-terminate the read data
+                printf("Data in file: %s\n", readBackData);
+            } else {
+                printf("Failed to read back data.\n");
+            }
+            free(readBackData);
+        } else {
+            printf("File 'fi.txt' not found in directory.\n");
+        }
+    } else {
+        printf("Failed to navigate to directory '/dir1/subdir1'.\n");
+    }
 
     return EXIT_SUCCESS;
 }
