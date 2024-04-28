@@ -97,13 +97,13 @@ int format(char *volumeName) {
  */
 int volumeName(char *result) {
 
-  block temp;
-
-  if (blockRead(0, result) < 0){
+  // read first block and write data into result (first block is volume name)
+  if (blockRead(0, (unsigned char*)result) < 0){
     return -1;
   }
 
-
+  // make sure string is null terminated
+  result[BLOCK_SIZE - 1] = '\0';
   return 0;
 }
 

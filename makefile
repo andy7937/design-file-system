@@ -33,3 +33,8 @@ after: afterTest.c fileSystem.c device.c file.c
 # Clean up binaries
 clean:
 	rm -f display test before after device_file
+
+# Custom Tests
+volumeName: volumeNameTest.c fileSystem.c device.c file.c
+	$(CC) $(CFLAGS) -o volumeName volumeNameTest.c fileSystem.c device.c file.c -lm
+
