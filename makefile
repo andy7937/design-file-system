@@ -38,3 +38,5 @@ clean:
 volumeName: volumeNameTest.c fileSystem.c device.c file.c
 	$(CC) $(CFLAGS) -o volumeName volumeNameTest.c fileSystem.c device.c file.c -lm
 
+createTest: createTest.c fileSystem.c device.c file.c
+	$(CC) $(CFLAGS) -o createTest createTest.c fileSystem.c device.c file.c -lm

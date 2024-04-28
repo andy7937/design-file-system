@@ -50,6 +50,7 @@ typedef struct {
 filecache fileCache[1024];
 int fileCachePos = 0;
 
+// COMPLETE
 /*
  * Formats the device for use by this file system.
  * The volume name must be < 64 bytes long.
@@ -91,6 +92,8 @@ int format(char *volumeName) {
   return 0;
 }
 
+
+// COMPLETE
 /*
  * Returns the volume's name in the result.
  * Returns 0 if no problem or -1 if the call failed.
@@ -107,6 +110,7 @@ int volumeName(char *result) {
   return 0;
 }
 
+// COMPLETE
 /*
  * Makes a file with a fully qualified pathname starting with "/".
  * It automatically creates all intervening directories.
@@ -124,21 +128,53 @@ int volumeName(char *result) {
  */
 int create(char *pathName) {
   // copy path name to stack
+  // If pathname is /root/dir/file1/file2
+  // dirName is /root/dir/file1
+  // baseName is /file2
   char dirPathName[strlen(pathName) + 1];
   char basePathName[strlen(pathName) + 1];
   strcpy(dirPathName, pathName);
   strcpy(basePathName, pathName);
   char *dirName = dirname(dirPathName);
   char *baseName = basename(basePathName);
+
+  // checking all file names are valid
+  int segmentBytes = 0;
+  int length = strlen(pathName);
+
+  // go through pathName and check if all segments are valid
+  for (int i = 0; i <= length; i++) {
+    // if we reach a / or the end of the string
+    if (pathName[i] == '/' || i == length) {
+      // if the segment is empty or too long
+      if (segmentBytes < 1 || segmentBytes > 7) {
+          file_errno = EOTHER;
+          return -1;
+      }
+        segmentBytes = 0; 
+    } 
+    else {
+      // if the character is not allowed
+      if ((unsigned char)pathName[i] < 0x20 || (unsigned char)pathName[i] > 0x7e) {
+          file_errno = EOTHER;
+          return -1;
+      }
+      // increase the segment byte length by 1
+      segmentBytes++;
+    }
+  }
+
   CHECK_TRY(baseName[0] == '.' || dirName[0] == '.', EOTHER)
   finfoData fData;
   CHECK_RET(traverseFiles(&fData, 1, dirName))
   int arrSize = fData.curDir.size / DIRCONTENTSIZE;
   finfo files[arrSize];
   CHECK_RET(getDirContent(&fData.curDir, files))
+  // go through the directory and see if the baseName is already inside
   fData.nextDirIndex = containsFile(files, arrSize, baseName, ISFILE);
   //If there is no such file
   if (fData.nextDirIndex == -1) {
+    // make new file at correct directory with baseName
     fData.nextDir = finfoNewFile(baseName);
     CHECK_RET(dataAppendDir(&fData.curDir, &fData.nextDir))
     CHECK_RET(updateDirEntry(&fData.prevDir, &fData.curDir, fData.curDirIndex))
@@ -150,6 +186,7 @@ int create(char *pathName) {
   return 0;
 }
 
+// TODO: TEST
 /*
  * Returns a list of all files in the named directory.
  * The "result" string is filled in with the output.
@@ -192,6 +229,7 @@ void list(char *result, char *directoryName) {
   }
 }
 
+// TODO
 /*
  * Writes data onto the end of the file.
  * Copies "length" bytes from data and appends them to the file.
@@ -204,6 +242,7 @@ int a2write(char *fileName, void *data, int length) {
   return 0;
 }
 
+// TODO: TEST
 /*
  * Reads data from the start of the file.
  * Maintains a file position so that subsequent reads continue
@@ -257,6 +296,7 @@ int a2read(char *fileName, void *data, int length) {
   return 0;
 }
 
+// TODO: TEST
 /*
  * Repositions the file pointer for the file at the specified location.
  * All positive integers are byte offsets from the start of the file.
