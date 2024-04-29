@@ -2,6 +2,11 @@
  *
  *  Modified on: 
  *  Author: 
+ *  Version 1.1
+ *  Changes:
+ * - Fixed a bug where `fileCachePos` was incorrectly incremented regardless of whether a file was already cached. 
+ *   This issue mainly resulted in unnecessary cache space usage but was unlikely to cause errors during low to moderate read operations.
+ *   This version ensures that `fileCachePos` is only incremented when a new file is added to the cache, thereby optimizing cache usage and management.
  *
  * Complete this file.
  */
@@ -138,27 +143,26 @@ int create(char *pathName) {
   char *dirName = dirname(dirPathName);
   char *baseName = basename(basePathName);
 
-  // checking all file names are valid
+    // checking all file names are valid
   int length = strlen(pathName);
   int segmentBytes = 0; // Reset segment length counter
   
-for (int i = 1; i <= length; i++) { // Start from 1 to skip the initial '/'
-    if (pathName[i] == '/' || i == length) {
-        if (segmentBytes < 1 || segmentBytes > 7) {
-            file_errno = EOTHER;
-            return -1;
-        }
-        segmentBytes = 0; // Reset for the next segment
-    } else {
-        // Check for valid ASCII characters
-        if ((unsigned char)pathName[i] < 0x20 || (unsigned char)pathName[i] > 0x7e) {
-            file_errno = EOTHER;
-            return -1;
-        }
-        segmentBytes++;
-    }
-}
-
+  for (int i = 1; i <= length; i++) { // Start from 1 to skip the initial '/'
+      if (pathName[i] == '/' || i == length) {
+          if (segmentBytes < 1 || segmentBytes > 7) {
+              file_errno = EOTHER;
+              return -1;
+          }
+          segmentBytes = 0; // Reset for the next segment
+      } else {
+          // Check for valid ASCII characters
+          if ((unsigned char)pathName[i] < 0x20 || (unsigned char)pathName[i] > 0x7e) {
+              file_errno = EOTHER;
+              return -1;
+          }
+          segmentBytes++;
+      }
+  }
 
   CHECK_TRY(baseName[0] == '.' || dirName[0] == '.', EOTHER)
   finfoData fData;
@@ -166,11 +170,9 @@ for (int i = 1; i <= length; i++) { // Start from 1 to skip the initial '/'
   int arrSize = fData.curDir.size / DIRCONTENTSIZE;
   finfo files[arrSize];
   CHECK_RET(getDirContent(&fData.curDir, files))
-  // go through the directory and see if the baseName is already inside
   fData.nextDirIndex = containsFile(files, arrSize, baseName, ISFILE);
   //If there is no such file
   if (fData.nextDirIndex == -1) {
-    // make new file at correct directory with baseName
     fData.nextDir = finfoNewFile(baseName);
     CHECK_RET(dataAppendDir(&fData.curDir, &fData.nextDir))
     CHECK_RET(updateDirEntry(&fData.prevDir, &fData.curDir, fData.curDirIndex))
@@ -334,10 +336,10 @@ int a2read(char *fileName, void *data, int length) {
   if (!isCached) {
     fileCache[fileCachePos].fileName = fileName;
     fileCache[fileCachePos].cursorpos = length;
+    fileCachePos++;
   } else {
     fileCache[cachePos].cursorpos += length;
   }
-  fileCachePos++;
   return 0;
 }
 
