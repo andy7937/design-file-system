@@ -227,7 +227,7 @@ void list(char *result, char *directoryName) {
   }
 }
 
-// TODO
+// TODO - writing into root files work but writing into subdirectories does not work
 /*
  * Writes data onto the end of the file.
  * Copies "length" bytes from data and appends them to the file.
@@ -236,58 +236,55 @@ void list(char *result, char *directoryName) {
  * Returns 0 if no problem or -1 if the call failed.
  */
 int a2write(char *fileName, void *data, int length) {
-  // Duplicate the fileName to use with dirname and basename
-  char dirPathName[strlen(fileName) + 1];
-  char basePathName[strlen(fileName) + 1];
-  strcpy(dirPathName, fileName);
-  strcpy(basePathName, fileName);
-  
-  // Extract directory path and base filename
-  char *dirName = dirname(dirPathName);
-  char *baseName = basename(basePathName);
+    if (length <= 0) {
+        file_errno = EOTHER; // Invalid length
+        return -1;
+    }
 
-  // Check for invalid file or directory names starting with '.'
-  if (baseName[0] == '.' || dirName[0] == '.') {
-    file_errno = EOTHER;
-    return -1;
-  }
+    char dirPathName[strlen(fileName) + 1];
+    char basePathName[strlen(fileName) + 1];
+    strcpy(dirPathName, fileName);
+    strcpy(basePathName, fileName);
 
-  // Data structure to hold file and directory information
-  finfoData fData;
+    char *dirName = dirname(dirPathName);
+    char *baseName = basename(basePathName);
 
-  // Navigate through the directory structure to find the directory
-  if (traverseFiles(&fData, 0, dirName) == -1) {
-    return -1; // Directory traversal failed
-  }
+    finfoData fData;
+    if (traverseFiles(&fData, 0, dirName) == -1) {
+        return -1; // Directory traversal failed
+    }
 
-  // Get the directory content
-  int arrSize = fData.curDir.size / DIRCONTENTSIZE;
-  finfo files[arrSize];
-  if (getDirContent(&fData.curDir, files) == -1) {
-    return -1; // Failed to read directory content
-  }
+    int arrSize = fData.curDir.size / DIRCONTENTSIZE;
+    finfo files[arrSize];
+    if (getDirContent(&fData.curDir, files) == -1) {
+        return -1; // Failed to read directory content
+    }
 
-  // Check if the file already exists
-  fData.nextDirIndex = containsFile(files, arrSize, baseName, ISFILE);
-  if (fData.nextDirIndex == -1) {
-    return -1; // File does not exist
-  }
+    int fileIndex = containsFile(files, arrSize, baseName, ISFILE);
+    if (fileIndex == -1) {
+        file_errno = EOTHER; // File does not exist
+        return -1;
+    }
+     
+    // Use dataAppend to append data to the file
+    if (dataAppend(&files[fileIndex], data, length) != 0) {
+        return -1; // Append failed
+    }
 
-  // File exists, prepare to append data
-  fData.nextDir = files[fData.nextDirIndex];
+    if (updateDirEntry(&fData.prevDir, &files[fileIndex], fileIndex) != 0) {
+        return -1; // Failed to update directory entry
+    }
 
-  // Append data to the file
-  if (dataAppend(&fData.nextDir, data, length) == -1) {
-    return -1; // Appending data failed
-  }
 
-  // Update the directory entry to reflect changes in the file structure
-  if (updateDirEntry(&fData.prevDir, &fData.curDir, fData.curDirIndex) == -1) {
-    return -1; // Failed to update directory entry
-  }
 
-  return 0; // Success
+    // Optionally, update directory entry to reflect new file size or other metadata changes
+    // This step is necessary if `dataAppend` doesn't handle updating the directory entry
+    // updateDirEntry(&fData.prevDir, &files[fileIndex], fileIndex);
+
+    return 0;
 }
+
+
 
 // TODO: TEST
 /*
