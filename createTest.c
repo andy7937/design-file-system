@@ -20,12 +20,12 @@ int main(void) {
     }
 
     // Test 2: Create a file in a new subdirectory
-    result = create("/dir1/subdir1/subdir2/fi.txt");
-    list(listResult, "/dir1");
+    result = create("/dir/subdir1/subdir2/fi.txt");
+    list(listResult, "/dir");
     printf("After Test 2 - show dir1:\n%s\n", listResult);
-    list(listResult, "/dir1/subdir1");
+    list(listResult, "/dir/subdir1");
     printf("After Test 2 - show subdir1\n%s\n", listResult);
-    list(listResult, "/dir1/subdir1/subdir2");
+    list(listResult, "/dir/subdir1/subdir2");
     printf("After Test 2 - show subdir2\n%s\n", listResult);
     list(listResult, "subdir2");
     if (result == 0) {
@@ -73,6 +73,17 @@ int main(void) {
     } else {
         printf("Test 6 Failed: Did not detect 0 byte name.\n");
     }
+
+    //testing before test
+    result =  create("/dir1/fileA");
+    list(listResult, "/dir1");
+    printf("After Test 7 - testing before\n%s\n", listResult);
+    if (result == -1) {
+        printf("Test 7 fail\n");
+    } else {
+        printf("Test 7 pass\n");
+    }
+
 
     return EXIT_SUCCESS;
 }

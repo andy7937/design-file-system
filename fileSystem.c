@@ -206,12 +206,18 @@ void list(char *result, char *directoryName) {
   strcat(result, ":\n");
 
   finfoData fData;
+  memset(&fData, 0, sizeof(fData));
+
   if (traverseFiles(&fData, 0, dirName) == -1) {
+    printf("traverse failed\n");
     return;
   }
+
   int arrSize = fData.curDir.size / DIRCONTENTSIZE;
   finfo files[arrSize];
+
   if (getDirContent(&fData.curDir, files) == -1) {
+    printf("getDirContent failed\n");
     return;
   }
   for (int i = 0; i < arrSize; i++) {
@@ -250,12 +256,15 @@ int a2write(char *fileName, void *data, int length) {
     char *baseName = basename(basePathName);
 
     finfoData fData;
+    memset(&fData, 0, sizeof(fData));
+
     if (traverseFiles(&fData, 0, dirName) == -1) {
         return -1; // Directory traversal failed
     }
 
     int arrSize = fData.curDir.size / DIRCONTENTSIZE;
     finfo files[arrSize];
+    
     if (getDirContent(&fData.curDir, files) == -1) {
         return -1; // Failed to read directory content
     }
@@ -265,7 +274,7 @@ int a2write(char *fileName, void *data, int length) {
         file_errno = EOTHER; // File does not exist
         return -1;
     }
-     
+
     // Use dataAppend to append data to the file
     if (dataAppend(&files[fileIndex], data, length) != 0) {
         return -1; // Append failed
@@ -275,11 +284,6 @@ int a2write(char *fileName, void *data, int length) {
         return -1; // Failed to update directory entry
     }
 
-
-
-    // Optionally, update directory entry to reflect new file size or other metadata changes
-    // This step is necessary if `dataAppend` doesn't handle updating the directory entry
-    // updateDirEntry(&fData.prevDir, &files[fileIndex], fileIndex);
 
     return 0;
 }

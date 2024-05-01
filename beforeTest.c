@@ -22,11 +22,7 @@ int main(void) {
 	create("/fileB");
 	a2write("/fileB", "bbbbb", 6);
 
-	list(listResult, "/");
-	printf("%s\n", listResult);
-
 	create("/dir1/fileA");
-	a2write("/dir1/fileA", "1a1a1a", 7);
 
 	printf("Test 1: List root\n");
 	list(listResult, "/");
