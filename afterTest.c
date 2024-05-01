@@ -19,6 +19,14 @@ int main(void) {
 	a2read("/dir1/fileA", data, 7);
 	printf("Data from /dir1/fileA: %s\n", data);
 
+	a2read("/dir1/fileB", data, 9);
+	printf("Data from /dir1/fileB: %s\n", data);
+
+	a2read("/dir1/dir2/fileB", data, 11);
+	printf("Data from /dir1/dir2/fileB: %s\n", data);
+
+
+
 	char listResult[1024];
 	list(listResult, "/");
 	printf("\n%s", listResult);

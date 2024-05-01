@@ -25,12 +25,27 @@ int main(void) {
 	create("/dir1/fileA");
 	a2write("/dir1/fileA", "1a1a1a", 7);
 
+	create("/dir1/dir2/fileB");
+	a2write("/dir1/dir2/fileB", "2b2b2b2b2b", 11);
+
+	create("/dir1/fileA");
+	a2write("/dir1/fileA", "1a1a1a1a", 9);
+
+	create("/dir1/fileB");
+	a2write("/dir1/fileB", "1b1b1b1b", 9);
+
+
+
 	printf("Test 1: List root\n");
 	list(listResult, "/");
 	printf("%s\n", listResult);
 
 	printf("Test 2: List /dir1/\n");
 	list(listResult, "/dir1");
+	printf("%s\n", listResult);
+
+	printf("Test 3: List /dir1/dir2/\n");
+	list(listResult, "/dir1/dir2");
 	printf("%s\n", listResult);
 	return EXIT_SUCCESS;
 }
