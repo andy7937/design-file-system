@@ -10,9 +10,8 @@ a: display before after
 # Target 'b' to run the executables in specified order
 b: a
 	./before
-	./display 3
 	./after
-	./display 3
+	./display
 
 # Building 'display' executable
 display: display.c device.c

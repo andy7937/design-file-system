@@ -282,7 +282,6 @@ int a2write(char *fileName, void *data, int length) {
         return -1; // Failed to update directory entry
     }
 
-
     return 0;
 }
 

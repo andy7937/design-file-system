@@ -21,18 +21,27 @@ int main(void) {
 
 	create("/fileB");
 	a2write("/fileB", "bbbbb", 6);
-
+	
 	create("/dir1/fileA");
 	a2write("/dir1/fileA", "1a1a1a", 7);
 
 	create("/dir1/dir2/fileB");
 	a2write("/dir1/dir2/fileB", "2b2b2b2b2b", 11);
-
+ 
 	create("/dir1/fileA");
 	a2write("/dir1/fileA", "1a1a1a1a", 9);
 
 	create("/dir1/fileB");
 	a2write("/dir1/fileB", "1b1b1b1b", 9);
+
+    // appending more data to fileA
+	a2write("/fileA", "ccccc", 6);
+
+	// Data from /fileA: aaaaaccccc
+	// Data from /dir1/fileA: 1a1a1a1a1a1a1a
+	// Data from /dir1/fileB: 1b1b1b1b
+	// Data from /dir1/dir2/fileB: 2b2b2b2b2b
+
 
 
 
