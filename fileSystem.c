@@ -206,7 +206,6 @@ void list(char *result, char *directoryName) {
   strcat(result, ":\n");
 
   finfoData fData;
-  memset(&fData, 0, sizeof(fData));
 
   if (traverseFiles(&fData, 0, dirName) == -1) {
     printf("traverse failed\n");
@@ -247,16 +246,15 @@ int a2write(char *fileName, void *data, int length) {
         return -1;
     }
 
+
     char dirPathName[strlen(fileName) + 1];
     char basePathName[strlen(fileName) + 1];
     strcpy(dirPathName, fileName);
     strcpy(basePathName, fileName);
-
     char *dirName = dirname(dirPathName);
     char *baseName = basename(basePathName);
 
     finfoData fData;
-    memset(&fData, 0, sizeof(fData));
 
     if (traverseFiles(&fData, 0, dirName) == -1) {
         return -1; // Directory traversal failed
@@ -280,7 +278,7 @@ int a2write(char *fileName, void *data, int length) {
         return -1; // Append failed
     }
 
-    if (updateDirEntry(&fData.prevDir, &files[fileIndex], fileIndex) != 0) {
+    if (updateDirEntry(&fData.curDir, &files[fileIndex], fileIndex) != 0) {
         return -1; // Failed to update directory entry
     }
 

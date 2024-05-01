@@ -23,12 +23,13 @@ int main(void) {
 	a2write("/fileB", "bbbbb", 6);
 
 	create("/dir1/fileA");
+	a2write("/dir1/fileA", "1a1a1a", 7);
 
 	printf("Test 1: List root\n");
 	list(listResult, "/");
 	printf("%s\n", listResult);
 
-	printf("Test 2: List /dir1\n");
+	printf("Test 2: List /dir1/\n");
 	list(listResult, "/dir1");
 	printf("%s\n", listResult);
 	return EXIT_SUCCESS;
