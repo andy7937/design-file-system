@@ -273,10 +273,13 @@ int a2write(char *fileName, void *data, int length) {
         return -1;
     }
 
+    length -= 1;
+    
     // Use dataAppend to append data to the file
     if (dataAppend(&files[fileIndex], data, length) != 0) {
         return -1; // Append failed
     }
+
 
     if (updateDirEntry(&fData.curDir, &files[fileIndex], fileIndex) != 0) {
         return -1; // Failed to update directory entry
