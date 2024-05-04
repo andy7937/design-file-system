@@ -64,6 +64,7 @@ int fileCachePos = 0;
  * Returns 0 if no problem or -1 if the call failed.
  */
 int format(char *volumeName) {
+  
   // set all memory to 0 except for first block
   CHECK_TRY(strlen(volumeName) >= BLOCK_SIZE || strlen(volumeName) <= 0,
             EBADVOLNAME)
