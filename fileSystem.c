@@ -301,49 +301,86 @@ int a2write(char *fileName, void *data, int length) {
  * Returns 0 if no problem or -1 if the call failed.
  */
 int a2read(char *fileName, void *data, int length) {
-  CHECK_TRY(length <= 0, EOTHER)
-  int cursorPos = 0;
-  int isCached = 0;
-  int cachePos = -1;
-  for (int i = 0; i < fileCachePos; i++) {
-    if (strcmp(fileName, fileCache[i].fileName) == 0) {
-      cursorPos = fileCache[i].cursorpos;
-      isCached = 1;
-      cachePos = i;
-      break;
+    if (length <= 0) {
+        file_errno = EOTHER; // Invalid length
+        return -1;
     }
-  }
-  char dirPathName[strlen(fileName) + 1];
-  char basePathName[strlen(fileName) + 1];
-  strcpy(dirPathName, fileName);
-  strcpy(basePathName, fileName);
-  char *dirName = dirname(dirPathName);
-  char *baseName = basename(basePathName);
-  finfoData fData;
-  CHECK_RET(traverseFiles(&fData, 0, dirName))
-  int arrSize = fData.curDir.size / DIRCONTENTSIZE;
-  finfo files[arrSize];
-  CHECK_RET(getDirContent(&fData.curDir, files))
-  fData.nextDirIndex = containsFile(files, arrSize, baseName, ISFILE);
-  CHECK_ERR(fData.nextDirIndex, ENOSUCHFILE)
-  fData.nextDir = files[fData.nextDirIndex];
-  if (cursorPos >= fData.nextDir.size) {
-    strncpy(data, "\0", length);
-  } else {
-    char readData[fData.nextDir.size + 1];
-    memset(readData, 0, fData.nextDir.size + 1);
-    CHECK_RET(dataRead(&fData.nextDir, readData))
-    strncpy(data, &readData[cursorPos], length);
-  }
-  if (!isCached) {
-    fileCache[fileCachePos].fileName = fileName;
-    fileCache[fileCachePos].cursorpos = length;
-    fileCachePos++;
-  } else {
-    fileCache[cachePos].cursorpos += length;
-  }
-  return 0;
+
+    // Clear the output buffer to avoid displaying leftover data
+    memset(data, 0, length + 1);  // Add +1 for null termination safety
+
+    int cursorPos = 0;
+    int isCached = 0;
+    int cachePos = -1;
+
+    // Search for existing cache entry
+    for (int i = 0; i < fileCachePos; i++) {
+        if (strcmp(fileName, fileCache[i].fileName) == 0) {
+            cursorPos = fileCache[i].cursorpos;
+            isCached = 1;
+            cachePos = i;
+            break;
+        }
+    }
+
+    // Directory and file name extraction
+    char dirPathName[strlen(fileName) + 1];
+    char basePathName[strlen(fileName) + 1];
+    strcpy(dirPathName, fileName);
+    strcpy(basePathName, fileName);
+    char *dirName = dirname(dirPathName);
+    char *baseName = basename(basePathName);
+
+    finfoData fData;
+    if (traverseFiles(&fData, 0, dirName) == -1) {
+        return -1;
+    }
+
+    int arrSize = fData.curDir.size / DIRCONTENTSIZE;
+    finfo files[arrSize];
+    if (getDirContent(&fData.curDir, files) == -1) {
+        return -1;
+    }
+
+    int fileIndex = containsFile(files, arrSize, baseName, ISFILE);
+    if (fileIndex == -1) {
+        file_errno = ENOSUCHFILE;
+        return -1;
+    }
+
+    finfo targetFile = files[fileIndex];
+    if (cursorPos >= targetFile.size) {
+        // Cursor is beyond the end of the file, so no data to read
+        return 0;
+    }
+
+    // Adjust read length if the request exceeds the file's remaining content
+    int maxReadable = targetFile.size - cursorPos;
+    int actualLength = (length < maxReadable) ? length : maxReadable;
+
+    // Read file content into a temporary buffer
+    char readData[targetFile.size + 1]; // Plus one for null termination
+    memset(readData, 0, targetFile.size + 1);
+    if (dataRead(&targetFile, readData) != 0) {
+        return -1;
+    }
+
+    // Copy the requested slice of data
+    memcpy(data, readData + cursorPos, actualLength);
+    ((char*)data)[actualLength] = '\0'; // Ensure null termination
+
+    // Update cache with new cursor position
+    if (!isCached) {
+        fileCache[fileCachePos].fileName = strdup(fileName); // Duplicate fileName for storage in cache
+        fileCache[fileCachePos].cursorpos = cursorPos + actualLength;
+        fileCachePos++;
+    } else {
+        fileCache[cachePos].cursorpos += actualLength;
+    }
+
+    return 0;
 }
+
 
 // TODO: TEST
 /*

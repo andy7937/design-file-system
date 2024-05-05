@@ -4,13 +4,23 @@
 
 int main(void) {
 
-    char data[128];
-    list(data, "/");
-    printf("Data read from /: %s\n", data);
-    list(data, "/Dir1");
-    printf("Data read from /Dir1: %s\n", data);
-    list(data, "/Dir1/Dir2");
-    printf("Data read from /Dir1/Dir2: %s\n", data);
+    char data_a[128];
+    format("Data Storage");
+
+    create("/dir1/fileA");
+    a2write("/dir1/fileA", "aaaaaa", 7); // Includes a null terminator
+    a2write("/dir1/fileA", "bbbbbb", 7); // Includes a null terminator
+
+    a2read("/dir1/fileA", data_a, 3); // Reads the first 3 bytes
+    printf("Data read: %s\n", data_a);
+    a2read("/dir1/fileA", data_a, 4); // Reads the next 4 bytes
+    printf("Data read: %s\n", data_a);
+    a2read("/dir1/fileA", data_a, 7); // Reads the next 4 bytes
+    printf("Data read: %s\n", data_a);
+
+
+
+
 
 
     return EXIT_SUCCESS;
