@@ -55,7 +55,7 @@ typedef struct {
 filecache fileCache[1024];
 int fileCachePos = 0;
 
-// COMPLETE
+
 /*
  * Formats the device for use by this file system.
  * The volume name must be < 64 bytes long.
@@ -99,7 +99,7 @@ int format(char *volumeName) {
 }
 
 
-// COMPLETE
+
 /*
  * Returns the volume's name in the result.
  * Returns 0 if no problem or -1 if the call failed.
@@ -116,7 +116,7 @@ int volumeName(char *result) {
   return 0;
 }
 
-// COMPLETE
+
 /*
  * Makes a file with a fully qualified pathname starting with "/".
  * It automatically creates all intervening directories.
@@ -185,7 +185,6 @@ int create(char *pathName) {
   return 0;
 }
 
-// TODO: TEST
 /*
  * Returns a list of all files in the named directory.
  * The "result" string is filled in with the output.
@@ -233,7 +232,6 @@ void list(char *result, char *directoryName) {
   }
 }
 
-// TODO - writing into root files work but writing into subdirectories does not work
 /*
  * Writes data onto the end of the file.
  * Copies "length" bytes from data and appends them to the file.
@@ -290,8 +288,6 @@ int a2write(char *fileName, void *data, int length) {
 }
 
 
-
-// TODO: TEST
 /*
  * Reads data from the start of the file.
  * Maintains a file position so that subsequent reads continue
@@ -302,18 +298,17 @@ int a2write(char *fileName, void *data, int length) {
  */
 int a2read(char *fileName, void *data, int length) {
     if (length <= 0) {
-        file_errno = EOTHER; // Invalid length
+        file_errno = EOTHER; 
         return -1;
     }
 
-    // Clear the output buffer to avoid displaying leftover data
-    memset(data, 0, length + 1);  // Add +1 for null termination safety
+
+    memset(data, 0, length + 1);  
 
     int cursorPos = 0;
     int isCached = 0;
     int cachePos = -1;
 
-    // Search for existing cache entry
     for (int i = 0; i < fileCachePos; i++) {
         if (strcmp(fileName, fileCache[i].fileName) == 0) {
             cursorPos = fileCache[i].cursorpos;
@@ -323,7 +318,6 @@ int a2read(char *fileName, void *data, int length) {
         }
     }
 
-    // Directory and file name extraction
     char dirPathName[strlen(fileName) + 1];
     char basePathName[strlen(fileName) + 1];
     strcpy(dirPathName, fileName);
@@ -350,34 +344,26 @@ int a2read(char *fileName, void *data, int length) {
 
     finfo targetFile = files[fileIndex];
     if (cursorPos >= targetFile.size) {
-        // Cursor is beyond the end of the file, so no data to read
         return 0;
     }
 
-    // Adjust read length if the request exceeds the file's remaining content
+
     int maxReadable = targetFile.size - cursorPos;
     int actualLength = (length < maxReadable) ? length : maxReadable;
-
-    // Read file content into a temporary buffer
-    char readData[targetFile.size + 1]; // Plus one for null termination
+    char readData[targetFile.size + 1];
     memset(readData, 0, targetFile.size + 1);
     if (dataRead(&targetFile, readData) != 0) {
         return -1;
     }
-
-    // Copy the requested slice of data
     memcpy(data, readData + cursorPos, actualLength);
-    ((char*)data)[actualLength] = '\0'; // Ensure null termination
-
-    // Update cache with new cursor position
+    ((char*)data)[actualLength] = '\0'; 
     if (!isCached) {
-        fileCache[fileCachePos].fileName = strdup(fileName); // Duplicate fileName for storage in cache
+        fileCache[fileCachePos].fileName = strdup(fileName); 
         fileCache[fileCachePos].cursorpos = cursorPos + actualLength;
         fileCachePos++;
     } else {
         fileCache[cachePos].cursorpos += actualLength;
     }
-
     return 0;
 }
 
