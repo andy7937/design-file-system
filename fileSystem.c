@@ -208,7 +208,6 @@ void list(char *result, char *directoryName) {
   finfoData fData;
 
   if (traverseFiles(&fData, 0, dirName) == -1) {
-    printf("traverse failed\n");
     return;
   }
 
@@ -216,7 +215,6 @@ void list(char *result, char *directoryName) {
   finfo files[arrSize];
 
   if (getDirContent(&fData.curDir, files) == -1) {
-    printf("getDirContent failed\n");
     return;
   }
   for (int i = 0; i < arrSize; i++) {
